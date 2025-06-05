@@ -5,13 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script>
-        function add(){
-            alert (Number(n1.value) + Number(n2.value);}
-        </script>
+        function add(a, b) {
+            return a + b;
+        }
+        function sub(a, b) {
+            return a - b;
+        }
+        function multiply(a, b) {
+            return a * b;
+        }
+        function divide(a, b) {
+            return a / b;
+        }
+
+        function Calculate() {
+            let a = Number(n1.value);
+            let b = Number(n2.value);
+            add.innerHTML = `The sum of ${a} and ${b} is ${add(a, b)}`;
+            sub.innerHTML = `The difference of ${a} and ${b} is ${sub(a, b)}`;
+            multiply.innerHTML = `The product of ${a} and ${b} is ${multiply(a, b)}`;
+            divide.innerHTML = `The quotient of ${a} divided by ${b} is ${divide(a, b)}`;
+        }
+    </script>
 </head>
 <body>
-   <input type="text" id="n1" />
-    <input type="text" id="n2" />
-    <button onclick="add()" style="background-color: yellow">Click here </button>
+    <h1>Assignment - 4</h1>
+    <input type="text" id="n1">
+    <input type="text" id="n2">
+    <button onclick="Calculate()" style="background-color: rgb(255, 242, 0);">Calculate</button>
+    <div id="add"></div>
+    <div id="sub"></div>
+    <div id="multiply"></div>
+    <div id="divide"></div>
 </body>
 </html>
