@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fruit List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    button {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Fruit Names</h1>
+
+  <input type="text" id="fruitInput" placeholder="Enter fruit name">
+  <button onclick="addFruit()">Add Fruit</button>
+
+  <ul id="fruitList"></ul>
+
+  <script>
+    let fruits = [];
+
+    function addFruit() {
+      const input = document.getElementById("fruitInput");
+      const fruitName = input.value.trim();
+
+      if (fruitName !== "") {
+        fruits.push(fruitName);
+        input.value = "";
+        displayFruits();
+      }
+    }
+
+    function deleteFruit(index) {
+      fruits.splice(index, 1);
+      displayFruits();
+    }
+
+    function displayFruits() {
+      const list = document.getElementById("fruitList");
+      list.innerHTML = "";
+
+      fruits.forEach((fruit, index) => {
+        const li = document.createElement("li");
+        li.textContent = fruit;
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete";
+        deleteBtn.onclick = () => deleteFruit(index);
+
+        li.appendChild(deleteBtn);
+        list.appendChild(li);
+      });
+    }
+  </script>
+
+</body>
+</html>
