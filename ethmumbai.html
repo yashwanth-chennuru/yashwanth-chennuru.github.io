@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETHMumbai Avatar Station</title>
+    
+    <!-- 1. Load React & ReactDOM from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- 2. Load Babel to translate JSX in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 3. Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 4. Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+    <!-- App Root -->
+    <div id="root"></div>
+
+    <!-- React Application Logic -->
+    <script type="text/babel">
+        const { useState, useRef, useEffect, useCallback } = React;
+
+        // --- Inline Icons (Replacing Lucide Imports for CDN compatibility) ---
+        const IconUpload = ({size=24, className}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        );
+        const IconDownload = ({size=24, className}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        );
+        const IconRotate = ({size=24, className}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        );
+        const IconImage = ({size=24, className}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+        );
+        const IconSparkles = ({size=24, className}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/></svg>
+        );
+        const IconMove = ({size=24, className}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="19 9 22 12 19 15"/><polyline points="9 19 12 22 15 19"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/></svg>
+        );
+        const IconZoomIn = ({size=24, className}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
+        );
+        const IconZoomOut = ({size=24, className}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
+        );
+        const IconTrash = ({size=24, className}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        );
+
+        // --- Custom SVG Components ---
+        const EthLogo = () => (
+            <svg viewBox="0 0 100 160" className="w-full h-full drop-shadow-lg">
+                <path d="M50 0L2 80L50 160L98 80L50 0Z" fill="#E2231A" />
+                <path d="M50 0L50 160L98 80L50 0Z" fill="#B91C15" opacity="0.2" />
+                <path d="M50 80L2 80L50 108L98 80L50 80Z" fill="#1C1C1C" opacity="0.3" />
+                <rect x="25" y="50" width="22" height="30" fill="white" rx="2" />
+                <rect x="53" y="50" width="22" height="30" fill="white" rx="2" />
+            </svg>
+        );
+
+        const CapSticker = () => (
+            <svg viewBox="0 0 200 150" className="w-full h-full drop-shadow-xl filter">
+                <path d="M20 100 C 20 50, 180 50, 180 100" fill="#1C1C1C" stroke="none" />
+                <path d="M20 100 L 0 110 C 10 130, 190 130, 200 110 L 180 100" fill="#1C1C1C" />
+                <path d="M20 100 Q 100 80 180 100 Q 100 150 20 100" fill="#333" />
+                <rect x="75" y="60" width="50" height="30" fill="white" rx="5" />
+                <path d="M100 65 L85 80 L115 80 Z" fill="#E2231A" />
+            </svg>
+        );
+
+        const ChaiSticker = () => (
+            <svg viewBox="0 0 100 120" className="w-full h-full drop-shadow-xl">
+                <path d="M20 20 L30 100 L70 100 L80 20 Z" fill="rgba(255,255,255,0.4)" stroke="white" strokeWidth="2"/>
+                <path d="M22 25 L31 95 L69 95 L78 25 Z" fill="#C4783C" /> 
+                <path d="M25 40 H75 M27 60 H73 M29 80 H71" stroke="black" strokeWidth="1" opacity="0.2"/>
+                <path d="M40 0 Q 50 10 40 15" stroke="white" strokeWidth="2" fill="none" opacity="0.6" />
+                <path d="M60 5 Q 70 15 60 20" stroke="white" strokeWidth="2" fill="none" opacity="0.6" />
+            </svg>
+        );
+
+        const GlaresSticker = () => (
+            <svg viewBox="0 0 200 80" className="w-full h-full drop-shadow-xl">
+                <path d="M20 20 H80 V60 H30 Q20 60 20 50 Z" fill="black" />
+                <path d="M120 20 H180 V50 Q180 60 170 60 H120 Z" fill="black" />
+                <rect x="80" y="25" width="40" height="5" fill="black" />
+                <rect x="30" y="25" width="40" height="20" fill="url(#glare)" opacity="0.4"/>
+                <rect x="130" y="25" width="40" height="20" fill="url(#glare)" opacity="0.4"/>
+                <defs>
+                <linearGradient id="glare" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="white"/>
+                    <stop offset="100%" stopColor="transparent"/>
+                </linearGradient>
+                </defs>
+            </svg>
+        );
+
+        // --- Main Component ---
+        function App() {
+            const [image, setImage] = useState(null);
+            const [scale, setScale] = useState(1);
+            const [rotation, setRotation] = useState(0);
+            const [position, setPosition] = useState({ x: 0, y: 0 });
+            const [selectedFrame, setSelectedFrame] = useState('doodles');
+            const [stickers, setStickers] = useState([]);
+            const [filter, setFilter] = useState('vibrant');
+            const [isDragging, setIsDragging] = useState(false);
+            const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+            
+            const canvasRef = useRef(null);
+            const fileInputRef = useRef(null);
+
+            const CANVAS_SIZE = 1080;
+            
+            const frames = [
+                { id: 'doodles', name: 'Mumbai Pop', color: '#E2231A' },
+                { id: 'bus', name: 'BEST Bus', color: '#E2231A' },
+                { id: 'clean', name: 'Clean Red', color: '#E2231A' },
+            ];
+
+            const availableStickers = [
+                { id: 'cap', icon: <CapSticker />, label: 'Cap' },
+                { id: 'chai', icon: <ChaiSticker />, label: 'Chai' },
+                { id: 'glares', icon: <GlaresSticker />, label: 'Glares' },
+            ];
+
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            setImage(img);
+                            setScale(Math.max(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height));
+                            setPosition({ x: 0, y: 0 });
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const drawCanvas = useCallback(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                
+                ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+                // Background
+                ctx.fillStyle = '#E2231A';
+                ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+                if (image) {
+                    ctx.save();
+                    ctx.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+                    ctx.translate(position.x, position.y);
+                    ctx.rotate((rotation * Math.PI) / 180);
+                    ctx.scale(scale, scale);
+                    ctx.drawImage(image, -image.width / 2, -image.height / 2);
+                    ctx.restore();
+
+                    // Filters
+                    if (filter === 'vibrant') {
+                        ctx.save();
+                        ctx.globalCompositeOperation = 'overlay';
+                        ctx.fillStyle = 'rgba(255, 214, 0, 0.2)';
+                        ctx.fillRect(0,0, CANVAS_SIZE, CANVAS_SIZE);
+                        ctx.restore();
+                    } else if (filter === 'monsoon') {
+                        ctx.save();
+                        ctx.globalCompositeOperation = 'multiply';
+                        ctx.fillStyle = 'rgba(2, 45, 48, 0.3)';
+                        ctx.fillRect(0,0, CANVAS_SIZE, CANVAS_SIZE);
+                        ctx.restore();
+                    }
+                }
+
+                // Frames
+                if (selectedFrame === 'doodles') {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.lineWidth = 2;
+                    for(let i=0; i<CANVAS_SIZE; i+=60) {
+                        ctx.beginPath();
+                        ctx.arc(i, 50, 20, 0, Math.PI, true);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(i, CANVAS_SIZE - 50);
+                        ctx.quadraticCurveTo(i+30, CANVAS_SIZE - 80, i+60, CANVAS_SIZE - 50);
+                        ctx.stroke();
+                    }
+                    ctx.font = 'bold 80px sans-serif';
+                    ctx.fillStyle = 'white';
+                    ctx.textAlign = 'center';
+                    ctx.fillText("ETHMumbai", CANVAS_SIZE/2, 100);
+                    ctx.restore();
+
+                } else if (selectedFrame === 'bus') {
+                    ctx.save();
+                    ctx.fillStyle = '#E2231A';
+                    ctx.beginPath();
+                    ctx.rect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                    ctx.rect(50, 200, CANVAS_SIZE/2 - 75, 400);
+                    ctx.rect(CANVAS_SIZE/2 + 25, 200, CANVAS_SIZE/2 - 75, 400);
+                    ctx.clip('evenodd'); 
+                    ctx.fill();
+
+                    ctx.fillStyle = '#FFD600';
+                    ctx.fillRect(0, 650, CANVAS_SIZE, 100);
+                    ctx.fillStyle = '#00A859';
+                    ctx.fillRect(0, 620, CANVAS_SIZE, 30);
+
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(CANVAS_SIZE/2 - 150, 50, 300, 80);
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 40px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText("DHARAVI DEPOT", CANVAS_SIZE/2, 105);
+                    ctx.restore();
+                } else {
+                    ctx.save();
+                    ctx.translate(CANVAS_SIZE - 150, CANVAS_SIZE - 150);
+                    ctx.scale(0.5, 0.5);
+                    ctx.beginPath();
+                    ctx.moveTo(100, 0);
+                    ctx.lineTo(0, 150);
+                    ctx.lineTo(100, 300);
+                    ctx.lineTo(200, 150);
+                    ctx.closePath();
+                    ctx.fillStyle = 'white';
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Stickers
+                stickers.forEach(s => {
+                    ctx.save();
+                    ctx.translate(s.x, s.y);
+                    ctx.scale(s.scale, s.scale);
+                    
+                    if (s.type === 'cap') {
+                        ctx.fillStyle = '#1C1C1C';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 50, Math.PI, 0); 
+                        ctx.fillRect(-50, -10, 100, 10);
+                        ctx.fillRect(-50, 0, 140, 10);
+                        ctx.fillStyle = 'white';
+                        ctx.fillText("ETH", -20, -20);
+                    } else if (s.type === 'chai') {
+                        ctx.fillStyle = '#C4783C';
+                        ctx.beginPath();
+                        ctx.moveTo(-20, -30);
+                        ctx.lineTo(-15, 30);
+                        ctx.lineTo(15, 30);
+                        ctx.lineTo(20, -30);
+                        ctx.fill();
+                        ctx.strokeStyle = 'white';
+                        ctx.stroke();
+                    } else if (s.type === 'glares') {
+                        ctx.fillStyle = 'black';
+                        ctx.beginPath();
+                        ctx.rect(-50, -15, 40, 30);
+                        ctx.rect(10, -15, 40, 30);
+                        ctx.rect(-10, -5, 20, 5);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                });
+            }, [image, position, scale, rotation, selectedFrame, filter, stickers]);
+
+            useEffect(() => {
+                drawCanvas();
+            }, [drawCanvas]);
+
+            const handleMouseDown = (e) => {
+                setIsDragging(true);
+                setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+            };
+
+            const handleMouseMove = (e) => {
+                if (isDragging && image) {
+                    setPosition({
+                        x: e.clientX - dragStart.x,
+                        y: e.clientY - dragStart.y
+                    });
+                }
+            };
+
+            const handleMouseUp = () => setIsDragging(false);
+
+            const addSticker = (type) => {
+                setStickers([...stickers, {
+                    id: Date.now(),
+                    type,
+                    x: CANVAS_SIZE / 2,
+                    y: CANVAS_SIZE / 2,
+                    scale: 2
+                }]);
+            };
+
+            const removeLastSticker = () => setStickers(stickers.slice(0, -1));
+
+            const downloadImage = () => {
+                const link = document.createElement('a');
+                link.download = 'ethmumbai-avatar.png';
+                link.href = canvasRef.current.toDataURL();
+                link.click();
+            };
+
+            return (
+                <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center pb-20">
+                    <header className="w-full bg-[#E2231A] text-white p-4 shadow-md sticky top-0 z-10">
+                        <div className="max-w-6xl mx-auto flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white rounded flex items-center justify-center p-1">
+                                    <EthLogo />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold tracking-tight">ETHMUMBAI</h1>
+                                    <p className="text-xs opacity-90 font-medium">AVATAR STATION</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={downloadImage}
+                                className="hidden md:flex items-center gap-2 bg-[#FFD600] text-black px-6 py-2 rounded-full font-bold hover:bg-[#ffe033] transition-colors shadow-sm"
+                            >
+                                <IconDownload size={20} />
+                                Download
+                            </button>
+                        </div>
+                    </header>
+
+                    <main className="w-full max-w-6xl mx-auto p-4 md:p-8 flex flex-col lg:flex-row gap-8">
+                        <div className="flex-1 space-y-8 order-2 lg:order-1">
+                            {!image ? (
+                                <div 
+                                    onClick={() => fileInputRef.current.click()}
+                                    className="border-4 border-dashed border-[#E2231A] bg-red-50 rounded-3xl h-64 flex flex-col items-center justify-center cursor-pointer hover:bg-red-100 transition-colors group"
+                                >
+                                    <div className="bg-white p-4 rounded-full shadow-md mb-4 group-hover:scale-110 transition-transform">
+                                        <IconUpload size={32} className="text-[#E2231A]" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[#E2231A]">Upload Your Photo</h3>
+                                    <p className="text-gray-500 mt-2">Make it you. Make it Mumbai.</p>
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        onChange={handleImageUpload} 
+                                        accept="image/*" 
+                                        className="hidden" 
+                                    />
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="font-bold text-lg flex items-center gap-2">
+                                                <IconMove size={18} /> Adjust Photo
+                                            </h3>
+                                            <button onClick={() => setImage(null)} className="text-red-500 text-sm font-medium hover:underline">
+                                                Reset Photo
+                                            </button>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-4">
+                                                <IconZoomOut size={16} className="text-gray-400" />
+                                                <input 
+                                                    type="range" 
+                                                    min="0.1" 
+                                                    max="3" 
+                                                    step="0.1" 
+                                                    value={scale} 
+                                                    onChange={(e) => setScale(parseFloat(e.target.value))}
+                                                    className="w-full accent-[#E2231A]"
+                                                />
+                                                <IconZoomIn size={16} className="text-gray-400" />
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <IconRotate size={16} className="text-gray-400" />
+                                                <input 
+                                                    type="range" 
+                                                    min="-180" 
+                                                    max="180" 
+                                                    value={rotation} 
+                                                    onChange={(e) => setRotation(parseInt(e.target.value))}
+                                                    className="w-full accent-[#E2231A]"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                                            <IconImage size={18} /> Select Frame
+                                        </h3>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {frames.map(frame => (
+                                                <button
+                                                    key={frame.id}
+                                                    onClick={() => setSelectedFrame(frame.id)}
+                                                    className={`p-2 rounded-xl border-2 transition-all text-sm font-bold ${
+                                                        selectedFrame === frame.id 
+                                                        ? 'border-[#E2231A] bg-red-50 text-[#E2231A]' 
+                                                        : 'border-gray-100 hover:border-gray-200 text-gray-600'
+                                                    }`}
+                                                >
+                                                    <div className="h-12 w-full rounded mb-2" style={{ background: frame.color }}></div>
+                                                    {frame.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                                            <IconSparkles size={18} /> Mumbai Vibe
+                                        </h3>
+                                        <div className="flex gap-2">
+                                            {['normal', 'vibrant', 'monsoon'].map(f => (
+                                                <button
+                                                    key={f}
+                                                    onClick={() => setFilter(f)}
+                                                    className={`flex-1 py-2 rounded-lg text-sm font-semibold capitalize ${
+                                                        filter === f 
+                                                        ? 'bg-[#1C1C1C] text-white' 
+                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    {f}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="font-bold text-lg">Add Swag</h3>
+                                            {stickers.length > 0 && (
+                                                <button onClick={removeLastSticker} className="text-red-500 p-1 hover:bg-red-50 rounded">
+                                                    <IconTrash size={18} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-4 overflow-x-auto pb-2">
+                                            {availableStickers.map(sticker => (
+                                                <button
+                                                    key={sticker.id}
+                                                    onClick={() => addSticker(sticker.id)}
+                                                    className="flex flex-col items-center gap-2 min-w-[80px] p-3 rounded-xl border border-gray-100 hover:border-[#FFD600] hover:bg-yellow-50 transition-all group"
+                                                >
+                                                    <div className="w-12 h-12 group-hover:scale-110 transition-transform">
+                                                        {sticker.icon}
+                                                    </div>
+                                                    <span className="text-xs font-bold text-gray-600">{sticker.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex-1 order-1 lg:order-2 flex flex-col items-center">
+                            <div className="sticky top-24 w-full">
+                                <div className="relative w-full aspect-square bg-gray-100 rounded-2xl overflow-hidden shadow-2xl ring-8 ring-white">
+                                    <canvas
+                                        ref={canvasRef}
+                                        width={1080}
+                                        height={1080}
+                                        className="w-full h-full object-contain cursor-move touch-none"
+                                        onMouseDown={handleMouseDown}
+                                        onMouseMove={handleMouseMove}
+                                        onMouseUp={handleMouseUp}
+                                        onMouseLeave={handleMouseUp}
+                                        onTouchStart={(e) => {
+                                            const touch = e.touches[0];
+                                            handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
+                                        }}
+                                        onTouchMove={(e) => {
+                                            const touch = e.touches[0];
+                                            handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+                                        }}
+                                        onTouchEnd={handleMouseUp}
+                                    />
+                                    {!image && (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
+                                            <h2 className="text-4xl font-black text-gray-300">PREVIEW</h2>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-6 text-center">
+                                    <p className="text-sm text-gray-500 mb-4">
+                                        💡 Pro tip: Drag to move your photo. Use controls to zoom/rotate.
+                                    </p>
+                                    <button 
+                                        onClick={downloadImage}
+                                        disabled={!image}
+                                        className="w-full md:hidden bg-[#E2231A] text-white py-4 rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        <IconDownload size={20} />
+                                        Download Avatar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                    <footer className="w-full bg-[#1C1C1C] text-white py-8 mt-12">
+                        <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center opacity-60 text-sm">
+                            <p>© 2025 ETHMumbai. All rights reserved.</p>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
