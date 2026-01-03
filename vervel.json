@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "redsecns.yash1th.in"
+        }
+      ],
+      "destination": "https://docs.fileverse.io/0xB50D1C087b03c331dAF5Ca858ab20DA664e93Fb8/7#key=h_7JckbfmVQE3n8gxam-f8Z49ZetWw9P5GpC8So09aT_5_Yh2SlEpW-HyFAkpyRk",
+      "permanent": false
+    }
+  ]
+}
