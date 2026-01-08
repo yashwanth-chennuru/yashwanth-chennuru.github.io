@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies and Series I Love 🎬</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #F5F3ED;
+            color: #2a2a2a;
+            font-family: "Avenir Next", "Avenir", sans-serif;
+            max-width: 900px; /* Wider for 6 columns */
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px solid #d1cfc7;
+            margin-bottom: 30px;
+        }
+        h2 { font-family: "Crimson Text", serif; font-style: italic; }
+        #movie-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr) !important;
+            gap: 12px;
+        }
+        .poster-wrapper {
+            aspect-ratio: 2 / 3;
+            border: 1px solid #d1cfc7;
+            overflow: hidden;
+        }
+        .poster-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .movie-title { font-family: "Crimson Text", serif; font-weight: bold; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Movies and Series I Love 🎬</h2>
+        <a href="index.html" style="font-size: 0.8em; text-decoration: none;">← Back Home</a>
+    </div>
+
+    <div id="movie-grid"></div>
+
+    <script>
+        async function fetchMovies() {
+            const grid = document.getElementById('movie-grid');
+            const LIST_ID = '8566680'; 
+            let allItems = [];
+            try {
+                // Fetching multiple pages for the full list
+                for (let i = 1; i <= 2; i++) {
+                    const response = await fetch(`/api/movies?listId=${LIST_ID}&page=${i}`);
+                    const data = await response.json();
+                    if (data.results) allItems = [...allItems, ...data.results];
+                }
+                allItems.sort((a, b) => b.vote_average - a.vote_average);
+                grid.innerHTML = allItems.map(item => `
+                    <div class="movie-card">
+                        <div class="poster-wrapper">
+                            <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" alt="${item.title || item.name}">
+                        </div>
+                        <div class="movie-info">
+                            <div class="movie-title">${item.title || item.name}</div>
+                            <div class="stars">${'★'.repeat(Math.round(item.vote_average / 2))}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+        fetchMovies();
+    </script>
+</body>
+</html>
